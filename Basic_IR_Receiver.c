@@ -81,15 +81,7 @@ int main(void)
 		}
 		for (i = 0; i < 16; i++)
 		{
-			if (inputBuffer[i] == 1)
-			{
-				headerGood = true;
-			}
-			else
-			{
-				headerGood = false;
-				break;
-			}
+			compareInputbuffer(1);
 		}
 		
 		for (i = 15; i < 24; i++)
@@ -98,15 +90,7 @@ int main(void)
 			{
 				break;
 			}
-			if (inputBuffer[i] == 0)
-			{
-				headerGood = true;
-			}
-			else
-			{
-				headerGood = false;
-				break;
-			}
+			compareInputbuffer(0);
 		}		
 		
 		i = 24;
