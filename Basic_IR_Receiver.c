@@ -71,14 +71,8 @@ int main(void)
 			{
 				for (k = 0; k < 16; k++);
 				{
-					if (readingOne[k] == 0)
-					{
-						convertedRoute &= ~(1 << k);
-					}
-					else
-					{
-						convertedRoute |= (1 << k);
-					}
+					if (readingOne[k] == 0) convertedRoute &= ~(1 << k);
+					else convertedRoute |= (1 << k);
 				}
 				switch (convertedRoute)
 				{
@@ -136,7 +130,7 @@ int main(void)
 		}
 	/////////////////////////////////////////////////////////////////////////
 	//
-	//				Finally, the vehicle is ready to start
+	//	    Finally, the vehicle is ready to start
 	//
 	/////////////////////////////////////////////////////////////////////////
 	
@@ -158,10 +152,7 @@ int main(void)
 		}
 		for (i = 0; i < 16; i++)
 		{
-			if (inputBuffer[i] == 1)
-			{
-				headerGood = 1;
-			}
+			if (inputBuffer[i] == 1) headerGood = 1;
 			else
 			{
 				headerGood = 0;
@@ -171,18 +162,9 @@ int main(void)
 		
 		for (i = 15; i < 24; i++)
 		{
-			if (headerGood == 0)
-			{
-				break;
-			}
-			if (inputBuffer[i] == 0)
-			{
-				headerGood = 1;
-			}
-			else
-			{
-				headerGood = 0;
-			}
+			if (headerGood == 0) break;
+			if (inputBuffer[i] == 0) headerGood = 1;
+			else headerGood = 0;
 		}		
 		
 		i = 24;
@@ -192,104 +174,44 @@ int main(void)
 			 switch (i)
 			 {
 				 case 0:
-					if (inputBuffer[i] == 1)
-					{
-						headerGood = 1;
-					}
-					else
-					{
-						headerGood = 0;
-					}				 
+					if (inputBuffer[i] == 1) headerGood = 1;
+					else headerGood = 0;				 
 					break;				 
 				 case 1:
-					if (inputBuffer[i] == 0)
-					{
-						headerGood = 1;
-					}
-					else
-					{
-						headerGood = 0;
-					}
+					if (inputBuffer[i] == 0) headerGood = 1;
+					else headerGood = 0;
 					break;
 				 case 2:
-					if (inputBuffer[i] == 1)
-					{
-						headerGood = 1;
-					}
-					else
-					{
-						headerGood = 0;
-					}				 
+					if (inputBuffer[i] == 1) headerGood = 1;
+					else headerGood = 0;				 
 					break;
 				 case 3:
-					if (inputBuffer[i] == 0)
-					{
-						headerGood = 1;
-					}
-					else
-					{
-						headerGood = 0;
-					}				 
+					if (inputBuffer[i] == 0) headerGood = 1;
+					else headerGood = 0;				 
 					break;
 				 case 4:
-					if (inputBuffer[i] == 1)
-					{
-						headerGood = 1;
-					}
-					else
-					{
-						headerGood = 0;
-					}				 
+					if (inputBuffer[i] == 1) headerGood = 1;
+					else headerGood = 0;				 
 					break;
 				 case 5:
-					if (inputBuffer[i] == 0)
-					{
-						headerGood = 1;
-					}
-					else
-					{
-						headerGood = 0;
-					}				 
+					if (inputBuffer[i] == 0) headerGood = 1;
+					else headerGood = 0;				 
 					break;	
 				 case 6:
-					if (inputBuffer[i] == 1)
-					{
-						headerGood = 1;
-					}
-					else
-					{
-						headerGood = 0;
-					}				 
+					if (inputBuffer[i] == 1) headerGood = 1;
+					else headerGood = 0;				 
 					break;
 				 case 7:
-					if (inputBuffer[i] == 0)
-					{
-						headerGood = 1;
-					}
-					else
-					{
-						headerGood = 0;
-					}				 
+					if (inputBuffer[i] == 0) headerGood = 1;
+					else headerGood = 0;				 
 					break;
 				 case 8:
-					if (inputBuffer[i] == 1)
-					{
-						headerGood = 1;
-					}
-					else
-					{
-						headerGood = 0;
-					}				 
+					if (inputBuffer[i] == 1) headerGood = 1;
+					else headerGood = 0;			 
 					break;
 				 case 9:
-					if (inputBuffer[i] == 0)
-					{
-						headerGood = 1;
-					}
-					else
-					{
-						headerGood = 0;
-					}				 
+					if (inputBuffer[i] == 0) headerGood = 1;
+					else headerGood = 0;			 
 					break;
 				 case 10:
 					for (i = 35; i < 45; i++)
@@ -298,24 +220,15 @@ int main(void)
 						{
 						case 0:
 							readingOne[i-35] = inputBuffer[i];
-							if(i == 45)
-							{
-								totalReadings = 1;
-							}
+							if(i == 45) totalReadings = 1;
 							break;
 						case 1:
 							readingTwo[i-35] = inputBuffer[i];
-							if(i == 45)
-							{
-								totalReadings = 2;
-							}
+							if(i == 45) totalReadings = 2;
 							break;
 						case 2:
 							readingThree[i-35] = inputBuffer[i];
-							if(i == 45)
-							{
-								totalReadings = 3;
-							}
+							if(i == 45) totalReadings = 3;
 							break;	
 						}
 					}
