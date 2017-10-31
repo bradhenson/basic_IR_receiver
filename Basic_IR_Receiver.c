@@ -9,7 +9,7 @@
 
 #define F_CPU 16000000UL		// define it now as 16 MHz unsigned long
 
-#include <avr/io.h>				// included in all avr projects
+#include <avr/io.h>			// included in all avr projects
 #include <util/delay.h>			// add this to use the delay function
 #include <avr/interrupt.h>		// add this to use the interrupt function
 
@@ -40,7 +40,7 @@ int main(void)
 	/* Interrupt Registers */
 	EIMSK = 0b00000001;			// enable External Interrupt Request for INIT0
 	EICRA = 0b00000011;			// enables interrupt on rising edge of INIT0 
-	sei();						// enables all interrupts
+	sei();					// enables all interrupts
 	
 	while (1) 
     {
@@ -96,7 +96,7 @@ int main(void)
 					finalRoute = 0b00000100;	// route 5 - 100
 					compareStatus = 1;
 					break;
-					case 0b0000000100101001:
+				case 0b0000000100101001:
 					finalRoute = 0b00000101;	// route 6 - 101
 					compareStatus = 1;
 					break;
