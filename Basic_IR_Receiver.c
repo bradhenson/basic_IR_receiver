@@ -16,14 +16,20 @@ uint8_t inputBuffer[44];		// creates a buffer array for storing input values
 uint8_t readingOne[10];
 uint8_t readingTwo[10];
 uint8_t readingThree[10];
-uint8_t finalRoute[]
 uint8_t totalReadings = 0;		// keeps track of how many readings have been received
+uint8_t x;
+uint8_t y;
+uint8_t finalRoute = 0;
+int convertedRoute = 0;
 bool headerGood = false;
 bool readingMatch = true;
-void compareInputbuffer(uint8_t value);
+bool compareStatus = false;
+bool readyStatus = false;
+void compareinputbuffer(uint8_t value);
+void cleareverything();
 
 int main(void)
-{   
+{  
 
 	/* PIN Registers */
 	DDRD &= ~(1 << 2);			// clear DDRD bit 2, sets PD2 (pin 4) for input
@@ -38,33 +44,107 @@ int main(void)
     {
 		if (totalReadings == 3)
 		{
+			EIMSK =& ~(1 << 0);
 			uint8_t i = 0;
-			do(readingMatch == true && i < 11) 
-			{
-				if (readingMatch == true && i == 10)
-				{
-					///////More to do right here. We have to convert the array to an int.
-					break;				
-				}
+			do(i < 10)
+			{				
 				if (readingOne[i] == readingTwo[i] && readingTwo[i] == readingThree[i])
 				{
 					readingMatch = true;
 				}
 				else
 				{
-					readingMatch = false;
-					readingOne[] = {0,0,0,0,0,0,0,0,0,0};
-					readingTwo[] = {0,0,0,0,0,0,0,0,0,0};
-					readingThree[] = {0,0,0,0,0,0,0,0,0,0};
-					totalReadings = 0;
+					cleareverything();
 					break;
 				}
+				i++;
 			}
-			++i;
+			if(readingMatch == true && i == 10) 
+			{
+				for (uint8_t k = 0; k < 16; k++);
+				{
+					if (readingOne[k] == 0)
+					{
+						convertedRoute =& ~(1 = k);
+					}
+					else
+					{
+						convertedRoute =| (1 = k);
+					}
+				}
+				switch (convertedRoute)
+				{
+					case 0b0000000001010101:
+					finalRoute = 0b00000000;	// route 1 - 000
+					compareStatus = true;
+					break;
+				}
+				case 0b0000000010101001:
+				{
+					finalRoute = 0b00000001;	// route 2 - 001
+					compareStatus = true;
+					break;
+				}
+				case 0b0000000010100101:
+				{
+					finalRoute = 0b00000010;	// route 3 - 010
+					compareStatus = true;
+					break;
+				}
+				case 0b0000000101001001:
+				{
+					finalRoute = 0b00000011;	// route 4 - 011
+					compareStatus = true;
+					break;
+				}
+				case 0b0000000010010101:
+				{
+					finalRoute = 0b00000100;	// route 5 - 100
+					compareStatus = true;
+					break;
+				}
+					case 0b0000000100101001:
+				{
+					finalRoute = 0b00000101;	// route 6 - 101
+					compareStatus = true;
+					break;
+				}
+				case 0b0000000100100101:
+				{
+					finalRoute = 0b00000110;	// route 7 - 110
+					compareStatus = true;
+					break;
+				}
+				case 0b0000001001001001:
+				{
+					finalRoute = 0b00000111;	// route 8 - 111
+					compareStatus = true;
+					break;
+				}
+						
+				if (compareStatus == true)
+				{
+					readyStatus = true;
+					// need to add code here to display the final route
+					// on a display
+				} 
+				else
+				{
+					readyStatus = false;
+					cleareverything();
+				}
+			break;				
 			}
-
 		}
-    }
+	/////////////////////////////////////////////////////////////////////////
+	//
+	//				Finally, the vehicle is ready to start
+	//
+	/////////////////////////////////////////////////////////////////////////
+	
+	// add code here to start moving the vehicle
+	
+	}	// end of while(1) loop
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -81,7 +161,7 @@ int main(void)
 		}
 		for (i = 0; i < 16; i++)
 		{
-			compareInputbuffer(1);
+			compareinputbuffer(i,1);
 		}
 		
 		for (i = 15; i < 24; i++)
@@ -90,7 +170,7 @@ int main(void)
 			{
 				break;
 			}
-			compareInputbuffer(0);
+			compareinputbuffer(i,0);
 		}		
 		
 		i = 24;
@@ -99,34 +179,34 @@ int main(void)
 			 switch (i)
 			 {
 				 case 0:
-					compareInputbuffer(1);				 
+					compareinputbuffer(i,1);				 
 					break;				 
 				 case 1:
-					compareInputbuffer(0);
+					compareinputbuffer(i,0);
 					break;
 				 case 2:
-					compareInputbuffer(1);				 
+					compareinputbuffer(i,1);				 
 					break;
 				 case 3:
-					compareInputbuffer(0);				 
+					compareinputbuffer(i,0);				 
 					break;
 				 case 4:
-					compareInputbuffer(1);				 
+					compareinputbuffer(i,1);				 
 					break;
 				 case 5:
-					compareInputbuffer(0);				 
+					compareinputbuffer(i,0);				 
 					break;	
 				 case 6:
-					compareInputbuffer(1);				 
+					compareinputbuffer(i,1);				 
 					break;
 				 case 7:
-					compareInputbuffer(0);				 
+					compareinputbuffer(i,0);				 
 					break;
 				 case 8:
-					compareInputbuffer(1);				 
+					compareinputbuffer(i,1);				 
 					break;
 				 case 9:
-					compareInputbuffer(0);				 
+					compareinputbuffer(i,0);				 
 					break;
 				 case 10:
 					for (i = 35; i < 45; i++)
@@ -161,12 +241,12 @@ int main(void)
 			i++;
 		
 		}
-
+	}
 /////////////////////////////////////////////////////////////////////////////
  
-void compareInputbuffer(uint8_t value)
+	void compareinputbuffer(uint8_t x, uint8_t y)
 	{
-		if (inputBuffer[i] == value)
+		if (inputBuffer[x] == y)
 		{
 			headerGood = true;
 		}
@@ -175,6 +255,16 @@ void compareInputbuffer(uint8_t value)
 			headerGood = false;
 			break;
 		}
+	return;
+	}
+	
+	void cleareverything()
+	{
+		readingMatch = false;
+		readingOne[] = {0,0,0,0,0,0,0,0,0,0};
+		readingTwo[] = {0,0,0,0,0,0,0,0,0,0};
+		readingThree[] = {0,0,0,0,0,0,0,0,0,0};
+		totalReadings = 0;
 	}
 
 }
