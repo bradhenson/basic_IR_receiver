@@ -46,7 +46,7 @@ uint8_t readyStatus = 0;    // flag
 int convertedRoute = 0;
 
 void compareinputbuffer();
-LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); // A new LCD library has to be installed
+LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
   
 void setup()
 {  
@@ -54,8 +54,6 @@ void setup()
   /* PIN Registers */
   DDRD &= ~(1 << 2);      // clear DDRD bit 2, sets PD2 (pin 4) for input
   PORTD |= (1 << 2);      // set PD2/INT0 (pin 4) internal pull-up resistor
-  DDRB |= (1 << 6 );
-  PORTD &= ~(1 << 6);
   
   /* Interrupt Registers */
   EIMSK = 0b00000001;     // enable External Interrupt Request for INIT0
