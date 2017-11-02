@@ -256,11 +256,8 @@ void setup()
 
 
     
-  }
-  
-  
-  
-  } // end of loop
+  } // end of while(readyStatus) loop
+  } // end of loop()
  
 /***************************************************************************
 
