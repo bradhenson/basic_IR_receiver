@@ -80,9 +80,15 @@ void setup()
   void loop() {
     
     /***************************************************
-    * Need to explain the follow if statement....
-    * 
-    * 
+    * Up til now, the main loop has just been looking for
+    * changes to the interrupt pin and firing off the ISR function.
+    * When the ISR function has recorded 3 readings, we can
+    * compare the three readings against one another just to 
+    * make sure they are the same three readings. If they are
+    * not the same readings, we clear everything and start over.
+    * It seems like a drastic measure at this point, but 
+    * we don't want the wrong values getting set before the robot
+    * starts moving.
     ***************************************************/
     if (totalReadings == 3)
     {
@@ -111,16 +117,21 @@ void setup()
       }
       
        /***************************************************
-       * Need to explain the follow if statement....
-       * 
-       * 
+       * Now that it is confirmed that the three readings 
+       * are in fact the same, the following (for) loop
+       * converts the readingX array into an integer variable
+       * type. Then the (switch) statement compares the integer
+       * to the known list of 8 choices. if it finds a match,
+       * it will set finalRoute equal to the convertedRoute and 
+       * sets the compareStatus flag to 1. We keep the convertedRoute
+       * and finalRoute seperate to allow for this final check.
        ***************************************************/
-      if(readingMatch == 1 && i == 10) 
+      if(readingMatch == 1) 
       {
-        for (k = 0; k < 16; k++);
+        for (i = 0; i < 16; i++);
         {
-          if (readingOne[k] == 0) && convertedRoute &= ~(1 << k);
-          else convertedRoute |= (1 << k);
+          if (readingOne[i] == 0) convertedRoute &= ~(1 << i);
+          else if (readingOne[i]== 1) convertedRoute |= (1 << i);
         }
         switch (convertedRoute)
         {
@@ -159,9 +170,11 @@ void setup()
         }
         
         /***************************************************
-        * Need to explain the follow if statement....
-        * 
-        * 
+        * The value stored in the convertedRoute variable has
+        * been confirmed to be one of the 8 possible choices.
+        * The next if statement sets the readyStatus flag to 
+        * 1 and and writes the finalRoute variable to the 
+        * LCD screen. 
         ***************************************************/
         if (compareStatus == 1)
         {
@@ -169,10 +182,10 @@ void setup()
           switch (finalRoute)
           {
           case 0:
-              lcd.setCursor(0, 0);
-              lcd.print(F("RECEIVED READING"));
-              lcd.setCursor(0, 1);
-              lcd.print(F(" ROUTE 1 - 000  "));
+            lcd.setCursor(0, 0);
+            lcd.print(F("RECEIVED READING"));
+            lcd.setCursor(0, 1);
+            lcd.print(F(" ROUTE 1 - 000  "));
             break;
           case 1:
             lcd.setCursor(0, 0);
@@ -237,9 +250,13 @@ void setup()
  *     Finally, the vehicle is ready to start
  *
  **************************************************************************/
+  while(readyStatus == 1){
   
   // add code here to start moving the vehicle
-  
+
+
+    
+  }
   
   
   
@@ -253,19 +270,31 @@ void setup()
 
   ISR(INT0_vect)
   /****************************************************************
-  * Need to explain the ISR function....
-  * 
-  * 
+  * Interrupt Service Routine vector fires when the INIT0 pin senses a
+  * state change. The micro will stop what it is doing and execute this
+  * function. The first thing that happens is a total of 44 measurements 
+  * are taken at 560us. This is off set by 230us on the first reading.
+  * Taking measurement at this interval will put the measurement in the
+  * middle of a signal (HIGH or LOW). Once the buffer is full, this function 
+  * compares the first 35 position of the array to what is expected, this 
+  * is the same for all 8 route signals. Then the final 10 positions are 
+  * stored as reading. Each time a reading is complete, it increments the 
+  * reading counter. This function will have to complete three times 
+  * before the data can be used in the main loop. If at any point the data 
+  * being compared in the first 35 positions isn't what is expected, the 
+  * function is exited without storing a reading.
   *****************************************************************/
   {
     _delay_us(230);
     inputBuffer[0] = PIND2;
-        
+
+    /* Compare the first 9 ms of the signal */    
     for (i = 1; i < 44; i++)
     {
       _delay_us(560);
       inputBuffer[i] = PIND2;
     }
+    /* Compare the second 4.5 ms of the signal */
     for (i = 0; i < 16; i++)
     {
       if (inputBuffer[i] == 1) headerGood = 1;
@@ -287,6 +316,7 @@ void setup()
     
     while(headerGood == 1 && i < 36)
     {
+       /* Compare the 5 logical 0's */
        switch (i)
        {
          case 0:
@@ -330,6 +360,7 @@ void setup()
           else headerGood = 0;       
           break;
          case 10:
+         /* Store the last portion of the signal as a reading */
           for (i = 35; i < 45; i++)
           {
             switch(totalReadings)
