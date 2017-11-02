@@ -1,78 +1,92 @@
-/********************************************************************************
-Basic_IR_Receiver.c
-Author: Bradford Henson
-Date: 10/30/2017
-Version: 0.0.0.1
-License: USE AT YOUR OWN RISK
+//********************************************************************************
+//Author: Bradford Henson
+//Date: 10/30/2017
+//Version: 0.0.0.1
+//License: USE AT YOUR OWN RISK
+//
+//Description: 
+//------------
+//TODO
+//
+//Hardware connections are as followed:
+//-------------------------------------
+//TODO
+//
+//Additional considerations:
+//-------------------------------------
+//- A backpack is used with the LCD to provide connectivity with fewer pins. It also uses the I2C.
+//  The library used for the backpack in the prototype is from the following website. This effectively
+//  replaces (extends functionality) the standard LiquidCrystal library. 
+//  https://bitbucket.org/fmalpartida/new-liquidcrystal/downloads/NewliquidCrystal_1.3.4.zip
+//  A good tutorial for using this type of backpack is at:
+//  http://arduino-info.wikispaces.com/LCD-Blue-I2C
+//
+//**********************************************************************************/
+#define F_CPU 16000000UL          // define it now as 16 MHz unsigned long
 
-Description: 
-------------
-TODO
-
-Hardware connections are as followed:
--------------------------------------
-TODO
-
-Additional considerations:
--------------------------------------
-- A backpack is used with the LCD to provide connectivity with fewer pins. It also uses the I2C.
-  The library used for the backpack in the prototype is from the following website. This effectively
-  replaces (extends functionality) the standard LiquidCrystal library. 
-  https://bitbucket.org/fmalpartida/new-liquidcrystal/downloads/NewliquidCrystal_1.3.4.zip
-  A good tutorial for using this type of backpack is at:
-  http://arduino-info.wikispaces.com/LCD-Blue-I2C
-
-**********************************************************************************/
-#define F_CPU 16000000UL    // define it now as 16 MHz unsigned long
-
-#include <avr/io.h>       // included in all avr projects
-#include <util/delay.h>     // add this to use the delay function
-#include <avr/interrupt.h>    // add this to use the interrupt function
+#include <avr/io.h>               // included in all avr projects
+#include <util/delay.h>           // add this to use the delay function
+#include <avr/interrupt.h>        // add this to use the interrupt function
 #include <LiquidCrystal_I2C.h>
 #include <Wire.h>
 
-uint8_t inputBuffer[44];    // creates a buffer array for storing input values
-uint8_t readingOne[10];
-uint8_t readingTwo[10];
-uint8_t readingThree[10];
-uint8_t totalReadings = 0;    // keeps track of how many readings have been received
-uint8_t k = 0;
-uint8_t i = 0;
-uint8_t finalRoute = 0;
-uint8_t headerGood = 1;     // flag
-uint8_t readingMatch = 1;   // flag
-uint8_t compareStatus = 0;    // flag
-uint8_t readyStatus = 0;    // flag
-int convertedRoute = 0;
+uint8_t inputBuffer[44];          // creates a buffer array for storing input values
+uint8_t readingOne[10];           // buffer for the first reading
+uint8_t readingTwo[10];           // buffer for the second reading
+uint8_t readingThree[10];         // buffer for the third reading
+uint8_t totalReadings = 0;        // keeps track of how many readings have been received
+uint8_t k = 0;                    // temp variable used to control a loop
+uint8_t i = 0;                    // temp variable used to control a loop
+uint8_t finalRoute;               // the final route after all of the parsing and verifying
+uint8_t headerGood = 1;           // flag 
+uint8_t readingMatch = 1;         // flag
+uint8_t compareStatus = 0;        // flag
+uint8_t readyStatus = 0;          // flag
+int convertedRoute = 0;           // temp variable compared against the known 8 routes
 
 void compareinputbuffer();
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
-  
+
+/***************************************************************************
+
+                            SETUP SECTION
+
+***************************************************************************/  
 void setup()
 {  
   
   /* PIN Registers */
-  DDRD &= ~(1 << 2);      // clear DDRD bit 2, sets PD2 (pin 4) for input
-  PORTD |= (1 << 2);      // set PD2/INT0 (pin 4) internal pull-up resistor
+  DDRD &= ~(1 << 3);              // clear DDRD bit 2, sets PD2 for input
+  PORTD |= (1 << 3);              // set PD2/INT0 internal pull-up resistor
   
   /* Interrupt Registers */
-  EIMSK = 0b00000001;     // enable External Interrupt Request for INIT0
-  EICRA = 0b00000011;     // enables interrupt on rising edge of INIT0 
-  sei();            // enables all interrupts
+  EIMSK = 0b00000001;             // enable External Interrupt Request for INIT0
+  EICRA = 0b00000001;             // enables interrupt on rising edge of INIT0 
+  sei();                          // enables all interrupts
   
-
+  /* Setup Display */
   lcd.begin(16,2);                // Set up the LCD's number of columns and rows
   lcd.backlight();
   lcd.setCursor(0, 0);
   lcd.print(F("  Standing By   "));
-  lcd.setCursor(0, 1);
-  lcd.print(F("               "));
+  lcd.clear();
 }
-  void loop() {
 
+/***************************************************************************
+
+                                EVENT LOOP
+
+***************************************************************************/
+  void loop() {
+    
+    /***************************************************
+    * Need to explain the follow if statement....
+    * 
+    * 
+    ***************************************************/
     if (totalReadings == 3)
     {
-      EIMSK &= ~(1 << 0);
+      cli();                      // disables all interrupts
       i = 0;
       while(i < 10)
       {       
@@ -82,6 +96,7 @@ void setup()
         }
         else
         {
+          /* Clears all the data and starts over */
           for (i = 0; i < 10; i++) readingOne[i] = 0;
           for (i = 0; i < 10; i++) readingTwo[i] = 0;
           for (i = 0; i < 10; i++) readingThree[i] = 0;
@@ -89,16 +104,22 @@ void setup()
           totalReadings = 0;
           compareStatus = 0;
           readyStatus = 0;
-          EIMSK |= (1 << 0);
+          sei();                  // enables all interrupts
           break;
         }
         i++;
       }
+      
+       /***************************************************
+       * Need to explain the follow if statement....
+       * 
+       * 
+       ***************************************************/
       if(readingMatch == 1 && i == 10) 
       {
         for (k = 0; k < 16; k++);
         {
-          if (readingOne[k] == 0) convertedRoute &= ~(1 << k);
+          if (readingOne[k] == 0) && convertedRoute &= ~(1 << k);
           else convertedRoute |= (1 << k);
         }
         switch (convertedRoute)
@@ -136,6 +157,12 @@ void setup()
           compareStatus = 1;
           break;
         }
+        
+        /***************************************************
+        * Need to explain the follow if statement....
+        * 
+        * 
+        ***************************************************/
         if (compareStatus == 1)
         {
           readyStatus = 1;
@@ -193,6 +220,7 @@ void setup()
         } 
         else
         {
+          /* Clears all the data and starts over */
           for (i = 0; i < 10; i++) readingOne[i] = 0;
           for (i = 0; i < 10; i++) readingTwo[i] = 0;
           for (i = 0; i < 10; i++) readingThree[i] = 0;
@@ -200,15 +228,15 @@ void setup()
           compareStatus = 0;
           readyStatus = 0;
           readingMatch = 0;
-          EIMSK |= (1 << 0);
+          sei();                  // enables all interrupts
         }        
       }
     }
-  /////////////////////////////////////////////////////////////////////////
-  //
-  //      Finally, the vehicle is ready to start
-  //
-  /////////////////////////////////////////////////////////////////////////
+ /**************************************************************************
+ *
+ *     Finally, the vehicle is ready to start
+ *
+ **************************************************************************/
   
   // add code here to start moving the vehicle
   
@@ -217,9 +245,18 @@ void setup()
   
   } // end of loop
  
-/////////////////////////////////////////////////////////////////////////////
+/***************************************************************************
+
+                            FUNCTIONS SECTION
+
+***************************************************************************/
 
   ISR(INT0_vect)
+  /****************************************************************
+  * Need to explain the ISR function....
+  * 
+  * 
+  *****************************************************************/
   {
     _delay_us(230);
     inputBuffer[0] = PIND2;
