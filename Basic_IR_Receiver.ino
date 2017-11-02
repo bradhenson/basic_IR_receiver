@@ -29,6 +29,7 @@ Additional considerations:
 #include <util/delay.h>     // add this to use the delay function
 #include <avr/interrupt.h>    // add this to use the interrupt function
 #include <LiquidCrystal_I2C.h>
+#include <Wire.h>
 
 uint8_t inputBuffer[44];    // creates a buffer array for storing input values
 uint8_t readingOne[10];
@@ -46,28 +47,31 @@ int convertedRoute = 0;
 
 void compareinputbuffer();
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); // A new LCD library has to be installed
-
-int main(void)
+  
+void setup()
 {  
-
+  
   /* PIN Registers */
   DDRD &= ~(1 << 2);      // clear DDRD bit 2, sets PD2 (pin 4) for input
   PORTD |= (1 << 2);      // set PD2/INT0 (pin 4) internal pull-up resistor
+  DDRB |= (1 << 6 );
+  PORTD &= ~(1 << 6);
   
   /* Interrupt Registers */
   EIMSK = 0b00000001;     // enable External Interrupt Request for INIT0
   EICRA = 0b00000011;     // enables interrupt on rising edge of INIT0 
   sei();            // enables all interrupts
   
+
   lcd.begin(16,2);                // Set up the LCD's number of columns and rows
   lcd.backlight();
   lcd.setCursor(0, 0);
-  lcd.print(F("               "));
+  lcd.print(F("  Standing By   "));
   lcd.setCursor(0, 1);
   lcd.print(F("               "));
-  
-  while (1) 
-    {
+}
+  void loop() {
+
     if (totalReadings == 3)
     {
       EIMSK &= ~(1 << 0);
@@ -199,8 +203,7 @@ int main(void)
           readyStatus = 0;
           readingMatch = 0;
           EIMSK |= (1 << 0);
-        }
-        break;        
+        }        
       }
     }
   /////////////////////////////////////////////////////////////////////////
@@ -211,11 +214,11 @@ int main(void)
   
   // add code here to start moving the vehicle
   
-  } // end of while(1) loop
+  
+  
+  
+  } // end of loop
  
- 
- return 0;
-}
 /////////////////////////////////////////////////////////////////////////////
 
   ISR(INT0_vect)
@@ -316,3 +319,4 @@ int main(void)
     
     }
   }
+ 
