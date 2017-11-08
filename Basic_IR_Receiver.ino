@@ -69,7 +69,8 @@ void setup()
   lcd.backlight();
   lcd.setCursor(0, 0);
   lcd.print(F("  Standing By   "));
-  lcd.clear();
+  lcd.setCursor(0, 1);
+  lcd.print(F("                "));
 }
 
 /***************************************************************************
@@ -256,8 +257,11 @@ void setup()
 
 
     
-  } // end of while(readyStatus) loop
-  } // end of loop()
+  }
+  
+  
+  
+  } // end of loop
  
 /***************************************************************************
 
@@ -285,16 +289,16 @@ void setup()
     _delay_us(230);
     inputBuffer[0] = PIND2;
 
-    /* Compare the first 9 ms of the signal */    
+    /* Capturing the data */    
     for (i = 1; i < 44; i++)
     {
       _delay_us(560);
       inputBuffer[i] = PIND2;
     }
-    /* Compare the second 4.5 ms of the signal */
+    /* Compare the header portion of the signal */
     for (i = 0; i < 16; i++)
     {
-      if (inputBuffer[i] == 1) headerGood = 1;
+      if (inputBuffer[i] == 0) headerGood = 1;
       else
       {
         headerGood = 0;
@@ -305,7 +309,7 @@ void setup()
     for (i = 15; i < 24; i++)
     {
       if (headerGood == 0) break;
-      if (inputBuffer[i] == 0) headerGood = 1;
+      if (inputBuffer[i] == 1) headerGood = 1;
       else headerGood = 0;
     }   
     
@@ -317,43 +321,43 @@ void setup()
        switch (i)
        {
          case 0:
-          if (inputBuffer[i] == 1) headerGood = 1;
+          if (inputBuffer[i] == 0) headerGood = 1;
           else headerGood = 0;         
           break;         
          case 1:
-          if (inputBuffer[i] == 0) headerGood = 1;
+          if (inputBuffer[i] == 1) headerGood = 1;
           else headerGood = 0;
           break;
          case 2:
-          if (inputBuffer[i] == 1) headerGood = 1;
+          if (inputBuffer[i] == 0) headerGood = 1;
           else headerGood = 0;         
           break;
          case 3:
-          if (inputBuffer[i] == 0) headerGood = 1;
+          if (inputBuffer[i] == 1) headerGood = 1;
           else headerGood = 0;         
           break;
          case 4:
-          if (inputBuffer[i] == 1) headerGood = 1;
+          if (inputBuffer[i] == 0) headerGood = 1;
           else headerGood = 0;         
           break;
          case 5:
-          if (inputBuffer[i] == 0) headerGood = 1;
+          if (inputBuffer[i] == 1) headerGood = 1;
           else headerGood = 0;         
           break;  
          case 6:
-          if (inputBuffer[i] == 1) headerGood = 1;
+          if (inputBuffer[i] == 0) headerGood = 1;
           else headerGood = 0;         
           break;
          case 7:
-          if (inputBuffer[i] == 0) headerGood = 1;
+          if (inputBuffer[i] == 1) headerGood = 1;
           else headerGood = 0;         
           break;
          case 8:
-          if (inputBuffer[i] == 1) headerGood = 1;
+          if (inputBuffer[i] == 0) headerGood = 1;
           else headerGood = 0;       
           break;
          case 9:
-          if (inputBuffer[i] == 0) headerGood = 1;
+          if (inputBuffer[i] == 1) headerGood = 1;
           else headerGood = 0;       
           break;
          case 10:
