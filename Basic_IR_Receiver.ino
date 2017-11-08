@@ -1,27 +1,27 @@
-//********************************************************************************
-//Author: Bradford Henson
-//Date: 10/30/2017
-//Version: 0.0.0.1
-//License: USE AT YOUR OWN RISK
-//
-//Description: 
-//------------
-//TODO
-//
-//Hardware connections are as followed:
-//-------------------------------------
-//TODO
-//
-//Additional considerations:
-//-------------------------------------
-//- A backpack is used with the LCD to provide connectivity with fewer pins. It also uses the I2C.
-//  The library used for the backpack in the prototype is from the following website. This effectively
-//  replaces (extends functionality) the standard LiquidCrystal library. 
-//  https://bitbucket.org/fmalpartida/new-liquidcrystal/downloads/NewliquidCrystal_1.3.4.zip
-//  A good tutorial for using this type of backpack is at:
-//  http://arduino-info.wikispaces.com/LCD-Blue-I2C
-//
-//**********************************************************************************/
+/********************************************************************************
+Author: Bradford Henson
+Date: 10/30/2017
+Version: 0.0.0.1
+License: USE AT YOUR OWN RISK
+
+Description: 
+------------
+TODO
+
+Hardware connections are as followed:
+-------------------------------------
+TODO
+
+Additional considerations:
+-------------------------------------
+- A backpack is used with the LCD to provide connectivity with fewer pins. It also uses the I2C.
+  The library used for the backpack in the prototype is from the following website. This effectively
+  replaces (extends functionality) the standard LiquidCrystal library. 
+  https://bitbucket.org/fmalpartida/new-liquidcrystal/downloads/NewliquidCrystal_1.3.4.zip
+  A good tutorial for using this type of backpack is at:
+  http://arduino-info.wikispaces.com/LCD-Blue-I2C
+
+********************************************************************************/
 #define F_CPU 16000000UL          // define it now as 16 MHz unsigned long
 
 #include <avr/io.h>               // included in all avr projects
@@ -47,11 +47,11 @@ int convertedRoute = 0;           // temp variable compared against the known 8 
 void compareinputbuffer();
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
 
-/***************************************************************************
+/********************************************************************************
 
                             SETUP SECTION
 
-***************************************************************************/  
+********************************************************************************/ 
 void setup()
 {  
   
@@ -73,11 +73,11 @@ void setup()
   lcd.print(F("                "));
 }
 
-/***************************************************************************
+/********************************************************************************
 
                                 EVENT LOOP
 
-***************************************************************************/
+********************************************************************************/ 
   void loop() {
     
     /***************************************************
@@ -246,11 +246,11 @@ void setup()
         }        
       }
     }
- /**************************************************************************
+/********************************************************************************
  *
  *     Finally, the vehicle is ready to start
  *
- **************************************************************************/
+********************************************************************************/ 
   while(readyStatus == 1){
   
   // add code here to start moving the vehicle
@@ -263,11 +263,11 @@ void setup()
   
   } // end of loop
  
-/***************************************************************************
+/********************************************************************************
 
                             FUNCTIONS SECTION
 
-***************************************************************************/
+********************************************************************************/ 
 
   ISR(INT0_vect)
   /****************************************************************
