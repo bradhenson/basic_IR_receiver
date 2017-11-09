@@ -56,7 +56,7 @@ void setup()
 {  
   
   /* PIN Registers */
-  DDRD &= ~(1 << 3);              // clear DDRD bit 2, sets PD2 for input
+  DDRD &= ~(1 << 3);              // clear DDRD bit 3, sets PD3 for input
   PORTD |= (1 << 3);              // set PD2/INT0 internal pull-up resistor
   
   /* Interrupt Registers */
