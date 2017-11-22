@@ -1,7 +1,7 @@
 /********************************************************************************
 Author: Bradford Henson
-Date: 10/30/2017
-Version: 0.0.0.1
+Date: 11/22/2017
+Version: 0.0.0.2
 License: USE AT YOUR OWN RISK
 
 Description: 
@@ -22,29 +22,30 @@ Additional considerations:
   http://arduino-info.wikispaces.com/LCD-Blue-I2C
 
 ********************************************************************************/
-#define F_CPU 16000000UL          // define it now as 16 MHz unsigned long
+#define F_CPU 16000000UL          // define CPU as 16 MHz unsigned long
+#define TRUE 1                    // define boolean value for TRUE = 1
+#define FALSE 0                   // define boolean value for FALSE = 0
 
 #include <avr/io.h>               // included in all avr projects
 #include <util/delay.h>           // add this to use the delay function
 #include <avr/interrupt.h>        // add this to use the interrupt function
-#include <LiquidCrystal_I2C.h>
-#include <Wire.h>
+#include <LiquidCrystal_I2C.h>    // new LCD Arduino library for use with the backpack
+#include <Wire.h>                 // add this to use I2C functions in Arduino
 
 uint8_t inputBuffer[44];          // creates a buffer array for storing input values
 uint8_t readingOne[10];           // buffer for the first reading
 uint8_t readingTwo[10];           // buffer for the second reading
 uint8_t readingThree[10];         // buffer for the third reading
 uint8_t totalReadings = 0;        // keeps track of how many readings have been received
-uint8_t k = 0;                    // temp variable used to control a loop
-uint8_t i = 0;                    // temp variable used to control a loop
-uint8_t finalRoute;               // the final route after all of the parsing and verifying
-uint8_t headerGood = 1;           // flag 
-uint8_t readingMatch = 1;         // flag
-uint8_t compareStatus = 0;        // flag
-uint8_t readyStatus = 0;          // flag
-int convertedRoute = 0;           // temp variable compared against the known 8 routes
+uint8_t i = 0;                    // temp variable used in most arrays and count tracking
+uint8_t headerGood = TRUE;        // flag 
+uint8_t readingMatch = FALSE;     // flag
+int finalRoute = 0;               // the final route after all of the parsing and verifying
 
-void compareinputbuffer();
+/*Function Prototypes:*/
+void clearAll();
+void receievedReading();
+
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
 
 /********************************************************************************
@@ -56,13 +57,13 @@ void setup()
 {  
   
   /* PIN Registers */
-  DDRD &= ~(1 << 3);              // clear DDRD bit 3, sets PD3 for input
-  PORTD |= (1 << 3);              // set PD2/INT0 internal pull-up resistor
+  DDRD &= ~(1 << 2);              // clear DDRD bit 2, sets PD2 for input
+  PORTD |= (1 << 2);              // set PD2/INT0 internal pull-up resistor
   
   /* Interrupt Registers */
   EIMSK = 0b00000001;             // enable External Interrupt Request for INIT0
-  EICRA = 0b00000001;             // enables interrupt on rising edge of INIT0 
-  sei();                          // enables all interrupts
+  EICRA = 0b00000010;             // enables interrupt on falling edge of INIT0 
+  sei();                          // enables all interrupts globally
   
   /* Setup Display */
   lcd.begin(16,2);                // Set up the LCD's number of columns and rows
@@ -81,10 +82,9 @@ void setup()
   void loop() {
     
     /***************************************************
-    * Up til now, the main loop has just been looking for
-    * changes to the interrupt pin and firing off the ISR function.
-    * When the ISR function has recorded 3 readings, we can
-    * compare the three readings against one another just to 
+    * The main loop does nothing until the ISR function
+    * has recorded 3 readings, we can then compare the three 
+    * readings against one another just to 
     * make sure they are the same three readings. If they are
     * not the same readings, we clear everything and start over.
     * It seems like a drastic measure at this point, but 
@@ -99,19 +99,11 @@ void setup()
       {       
         if (readingOne[i] == readingTwo[i] && readingTwo[i] == readingThree[i])
         {
-          readingMatch = 1;
+          readingMatch = TRUE;
         }
         else
         {
-          /* Clears all the data and starts over */
-          for (i = 0; i < 10; i++) readingOne[i] = 0;
-          for (i = 0; i < 10; i++) readingTwo[i] = 0;
-          for (i = 0; i < 10; i++) readingThree[i] = 0;
-          readingMatch = 0;
-          totalReadings = 0;
-          compareStatus = 0;
-          readyStatus = 0;
-          sei();                  // enables all interrupts
+          clearAll();
           break;
         }
         i++;
@@ -120,148 +112,104 @@ void setup()
        /***************************************************
        * Now that it is confirmed that the three readings 
        * are in fact the same, the following (for) loop
-       * converts the readingX array into an integer variable
+       * converts the reading array into an integer variable
        * type. Then the (switch) statement compares the integer
        * to the known list of 8 choices. if it finds a match,
-       * it will set finalRoute equal to the convertedRoute and 
-       * sets the compareStatus flag to 1. We keep the convertedRoute
-       * and finalRoute seperate to allow for this final check.
+       * it will set finalRoute and display it on an LCD.
        ***************************************************/
-      if(readingMatch == 1) 
+      if(readingMatch == TRUE) 
       {
         for (i = 0; i < 16; i++);
         {
-          if (readingOne[i] == 0) convertedRoute &= ~(1 << i);
-          else if (readingOne[i]== 1) convertedRoute |= (1 << i);
+          /***********************************************
+          *The array is being cast as an int to make it easier 
+          *to pass the value to the switch case.
+          ***********************************************/
+          if (readingOne[i] == 0) finalRoute &= ~(1 << i);
+          else if (readingOne[i]== 1) finalRoute |= (1 << i);
         }
-        switch (convertedRoute)
+        switch (finalRoute)
         {
         case 0b0000000001010101:
-          finalRoute = 0b00000000;  // route 1 - 000
-          compareStatus = 1;
+          // route 1 - 000
+            receievedReading();
+            lcd.print(F(" ROUTE 1 - 000  "));
+            while(1){
+
+               //Code for route 1 goes here
+            }
           break;
         case 0b0000000010101001:
-          finalRoute = 0b00000001;  // route 2 - 001
-          compareStatus = 1;
+          // route 2 - 001
+            receievedReading();
+            lcd.print(F(" ROUTE 2 - 001  "));
+            while(1){
+
+               //Code for route 2 goes here
+            }
           break;
         case 0b0000000010100101:
-          finalRoute = 0b00000010;  // route 3 - 010
-          compareStatus = 1;
+          // route 3 - 010
+            receievedReading();
+            lcd.print(F(" ROUTE 3 - 010  "));
+            while(1){
+
+               //Code for route 3 goes here
+            }
           break;
         case 0b0000000101001001:
-          finalRoute = 0b00000011;  // route 4 - 011
-          compareStatus = 1;
+          // route 4 - 011
+            receievedReading();
+            lcd.print(F(" ROUTE 4 - 011  "));
+            while(1){
+
+               //Code for route 4 goes here
+            }
           break;
         case 0b0000000010010101:
-          finalRoute = 0b00000100;  // route 5 - 100
-          compareStatus = 1;
+          // route 5 - 100
+            receievedReading();
+            lcd.print(F(" ROUTE 5 - 100  "));
+            while(1){
+
+               //Code for route 5 goes here
+            }
           break;
         case 0b0000000100101001:
-          finalRoute = 0b00000101;  // route 6 - 101
-          compareStatus = 1;
+          // route 6 - 101
+            receievedReading();
+            lcd.print(F(" ROUTE 6 - 101  "));
+            while(1){
+
+               //Code for route 6 goes here
+            }
           break;
         case 0b0000000100100101:
-          finalRoute = 0b00000110;  // route 7 - 110
-          compareStatus = 1;
+          // route 7 - 110
+            receievedReading();
+            lcd.print(F(" ROUTE 7 - 110  "));
+            while(1){
+
+               //Code for route 7 goes here
+            }
           break;
         case 0b0000001001001001:
-          finalRoute = 0b00000111;  // route 8 - 111
-          compareStatus = 1;
-          break;
-        }
-        
-        /***************************************************
-        * The value stored in the convertedRoute variable has
-        * been confirmed to be one of the 8 possible choices.
-        * The next if statement sets the readyStatus flag to 
-        * 1 and and writes the finalRoute variable to the 
-        * LCD screen. 
-        ***************************************************/
-        if (compareStatus == 1)
-        {
-          readyStatus = 1;
-          switch (finalRoute)
-          {
-          case 0:
-            lcd.setCursor(0, 0);
-            lcd.print(F("RECEIVED READING"));
-            lcd.setCursor(0, 1);
-            lcd.print(F(" ROUTE 1 - 000  "));
-            break;
-          case 1:
-            lcd.setCursor(0, 0);
-            lcd.print(F("RECEIVED READING"));
-            lcd.setCursor(0, 1);
-            lcd.print(F(" ROUTE 2 - 001  "));
-            break;
-          case 2:
-            lcd.setCursor(0, 0);
-            lcd.print(F("RECEIVED READING"));
-            lcd.setCursor(0, 1);
-            lcd.print(F(" ROUTE 3 - 010  "));
-            break;
-          case 3:
-            lcd.setCursor(0, 0);
-            lcd.print(F("RECEIVED READING"));
-            lcd.setCursor(0, 1);
-            lcd.print(F(" ROUTE 4 - 011  "));
-            break;
-          case 4:
-            lcd.setCursor(0, 0);
-            lcd.print(F("RECEIVED READING"));
-            lcd.setCursor(0, 1);
-            lcd.print(F(" ROUTE 5 - 100  "));
-            break;
-          case 5:
-            lcd.setCursor(0, 0);
-            lcd.print(F("RECEIVED READING"));
-            lcd.setCursor(0, 1);
-            lcd.print(F(" ROUTE 6 - 101  "));
-            break;
-          case 6:
-            lcd.setCursor(0, 0);
-            lcd.print(F("RECEIVED READING"));
-            lcd.setCursor(0, 1);
-            lcd.print(F(" ROUTE 7 - 110  "));
-            break;
-          case 7:
-            lcd.setCursor(0, 0);
-            lcd.print(F("RECEIVED READING"));
-            lcd.setCursor(0, 1);
+          // route 8 - 111
+            receievedReading();
             lcd.print(F(" ROUTE 8 - 111  "));
-            break;                                                                        
-          }
-        } 
-        else
-        {
-          /* Clears all the data and starts over */
-          for (i = 0; i < 10; i++) readingOne[i] = 0;
-          for (i = 0; i < 10; i++) readingTwo[i] = 0;
-          for (i = 0; i < 10; i++) readingThree[i] = 0;
-          totalReadings = 0;
-          compareStatus = 0;
-          readyStatus = 0;
-          readingMatch = 0;
-          sei();                  // enables all interrupts
-        }        
+            while(1){
+
+               //Code for route 8 goes here
+            }
+          break;
+         }      
+       } 
+       else
+       {
+         clearAll();
+       }        
       }
-    }
-/********************************************************************************
- *
- *     Finally, the vehicle is ready to start
- *
-********************************************************************************/ 
-  while(readyStatus == 1){
-  
-  // add code here to start moving the vehicle
-
-
-    
-  }
-  
-  
-  
-  } // end of loop
+ } // end of event loop
  
 /********************************************************************************
 
@@ -269,7 +217,6 @@ void setup()
 
 ********************************************************************************/ 
 
-  ISR(INT0_vect)
   /****************************************************************
   * Interrupt Service Routine vector fires when the INIT0 pin senses a
   * state change. The micro will stop what it is doing and execute this
@@ -285,7 +232,13 @@ void setup()
   * being compared in the first 35 positions isn't what is expected, the 
   * function is exited without storing a reading.
   *****************************************************************/
+  ISR(INT0_vect)
   {
+    //LCD commands are for trouble shooting, they would indicate an ISR event
+    //lcd.clear();
+    //lcd.setCursor(0,1);
+    //lcd.print("ISR TRIGGERED");
+    
     _delay_us(230);
     inputBuffer[0] = PIND2;
 
@@ -298,85 +251,83 @@ void setup()
     /* Compare the header portion of the signal */
     for (i = 0; i < 16; i++)
     {
-      if (inputBuffer[i] == 0) headerGood = 1;
+      if (inputBuffer[i] == 0) headerGood = TRUE;
       else
       {
-        headerGood = 0;
+        headerGood = FALSE;
         break;
       }
     }
     
-    for (i = 15; i < 24; i++)
+    for (i = 16; i < 24; i++)
     {
-      if (headerGood == 0) break;
-      if (inputBuffer[i] == 1) headerGood = 1;
-      else headerGood = 0;
+      if (headerGood == FALSE) break;
+      if (inputBuffer[i] == 1) headerGood = TRUE;
+      else headerGood = FALSE;
     }   
-    
-    i = 24;
-    
-    while(headerGood == 1 && i < 36)
+    i = 24; // Technically this isn't needed, the count is 24
+    while(headerGood == TRUE && i < 35)
     {
        /* Compare the 5 logical 0's */
        switch (i)
        {
-         case 0:
-          if (inputBuffer[i] == 0) headerGood = 1;
-          else headerGood = 0;         
+         case 24:
+          if (inputBuffer[i] == 0) headerGood = TRUE;
+          else headerGood = FALSE;         
           break;         
-         case 1:
-          if (inputBuffer[i] == 1) headerGood = 1;
-          else headerGood = 0;
+         case 25:
+          if (inputBuffer[i] == 1) headerGood = TRUE;
+          else headerGood = FALSE;
           break;
-         case 2:
-          if (inputBuffer[i] == 0) headerGood = 1;
-          else headerGood = 0;         
+         case 26:
+          if (inputBuffer[i] == 0) headerGood = TRUE;
+          else headerGood = FALSE;         
           break;
-         case 3:
-          if (inputBuffer[i] == 1) headerGood = 1;
-          else headerGood = 0;         
+         case 27:
+          if (inputBuffer[i] == 1) headerGood = TRUE;
+          else headerGood = FALSE;         
           break;
-         case 4:
-          if (inputBuffer[i] == 0) headerGood = 1;
-          else headerGood = 0;         
+         case 28:
+          if (inputBuffer[i] == 0) headerGood = TRUE;
+          else headerGood = FALSE;         
           break;
-         case 5:
-          if (inputBuffer[i] == 1) headerGood = 1;
-          else headerGood = 0;         
+         case 29:
+          if (inputBuffer[i] == 1) headerGood = TRUE;
+          else headerGood = FALSE;         
           break;  
-         case 6:
-          if (inputBuffer[i] == 0) headerGood = 1;
-          else headerGood = 0;         
+         case 30:
+          if (inputBuffer[i] == 0) headerGood = TRUE;
+          else headerGood = FALSE;         
           break;
-         case 7:
-          if (inputBuffer[i] == 1) headerGood = 1;
-          else headerGood = 0;         
+         case 31:
+          if (inputBuffer[i] == 1) headerGood = TRUE;
+          else headerGood = FALSE;         
           break;
-         case 8:
-          if (inputBuffer[i] == 0) headerGood = 1;
-          else headerGood = 0;       
+         case 32:
+          if (inputBuffer[i] == 0) headerGood = TRUE;
+          else headerGood = FALSE;       
           break;
-         case 9:
-          if (inputBuffer[i] == 1) headerGood = 1;
-          else headerGood = 0;       
+         case 33:
+          if (inputBuffer[i] == 1) headerGood = TRUE;
+          else headerGood = FALSE;       
           break;
-         case 10:
+         case 34:
          /* Store the last portion of the signal as a reading */
-          for (i = 35; i < 45; i++)
+          for (i = 34; i < 44; i++)
           {
             switch(totalReadings)
             {
             case 0:
-              readingOne[i-35] = inputBuffer[i];
-              if(i == 45) totalReadings = 1;
+              readingOne[i-34] = inputBuffer[i];
+              if(i == 43) totalReadings = 1;
               break;
             case 1:
-              readingTwo[i-35] = inputBuffer[i];
-              if(i == 45) totalReadings = 2;
+              readingTwo[i-34] = inputBuffer[i];
+              if(i == 43) totalReadings = 2;
               break;
             case 2:
-              readingThree[i-35] = inputBuffer[i];
-              if(i == 45) totalReadings = 3;
+              readingThree[i-34] = inputBuffer[i];
+              if(i == 43) totalReadings = 3;
               break;  
             }
           }
@@ -386,4 +337,20 @@ void setup()
     
     }
   }
- 
+
+  void receievedReading(){
+       lcd.setCursor(0, 0);
+       lcd.print(F("RECEIVED READING"));
+       lcd.setCursor(0, 1);
+  }
+
+  void clearAll(){
+          /* Clears all the data and starts over */
+          for (i = 0; i < 10; i++) readingOne[i] = 0;
+          for (i = 0; i < 10; i++) readingTwo[i] = 0;
+          for (i = 0; i < 10; i++) readingThree[i] = 0;
+          totalReadings = FALSE;
+          readingMatch = FALSE;
+          sei();                  // enables all interrupts
+  }
+
