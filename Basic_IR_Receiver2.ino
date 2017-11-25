@@ -34,7 +34,7 @@ Additional considerations:
 
 uint8_t inputBuffer[47];          // creates a buffer array for storing input values
 uint8_t readingOne[13];           // buffer for the first reading
-uint8_t totalReadings = 0;        // keeps track of how many readings have been received
+uint8_t totalReadings = 0;        // flag for indicating a signal was recieved and processed
 uint8_t i = 0;                    // temp variable used in most arrays and count tracking
 uint8_t headerGood = TRUE;        // flag 
 uint8_t isrTrigger = 0;           // flag for the interrupt event
@@ -83,17 +83,31 @@ void setup()
 ********************************************************************************/ 
   void loop() {
 
-      if (isrTrigger == 1) _captureData();
-      if (isrTrigger == 1) _processData();
+      if (isrTrigger == 1) _captureData();  // capture data function following an interrupt
+      if (isrTrigger == 1) _processData();  // process data after it has been captured
 
-      if (totalReadings == 1) 
+       /********************************************************
+       * At the end of the process data function, if a captured 
+       * waveform meets a specific set of rules, the totalReading 
+       * variable is changed from 0 to 1 to allow the data to be 
+       * used by the main switch statement.
+       ********************************************************/
+      if (totalReadings == 1)
       {
         totalReadings = 0;
+       /********************************************************
+       * At this point the captured waveform is stored in an array called 
+       * readingOne,before we can pass the information to the switch
+       * statement, we need to convert it to a 16 bit integer, that 
+       * is the purpose of the _convertReading() function. The 
+       * converted value is stored as a decimal value in the variable
+       * finalRoute.
+       ********************************************************/
         _convertReading();
         
         switch (finalRoute)
         {
-        case 5440: //0b0000000001010101
+        case 5440:
           // route 1 - 000
             lcd.setCursor(0, 0);
             lcd.print(F("RECEIVED READING"));
@@ -186,6 +200,9 @@ void setup()
        else
        {
           //clear reading and reading count to start over
+          //need to evaluate if this bit of code is really needed
+          //initially this portion was to clear out a number of flags
+          // however, most of the flags have been deleted.
           for (i = 0; i < 10; i++) readingOne[i] = 0;
           totalReadings = 0;
        }        
@@ -199,15 +216,20 @@ void setup()
 ********************************************************************************/ 
 
  /*******************************************************************************
- * Function Name:
+ * Function Name: ISR(INT0_vect
  * 
  * Author: 
  * 
- * Description: 
+ * Description: When the microcontroller sees an interrupt on Digital Pin 2 of the
+ * Arduino (PD2 on the chip itself), the following interrupt service routine is 
+ * executed. The goal of the ISR is to be short and quick to execute, so it merely
+ * sets a flag to let the main loop know that a falling edge was detected. By setting
+ * isrTrigger to 1 or TRUE, the micro wil execute the data capture and processing
+ * functions.
  *******************************************************************************/ 
  ISR(INT0_vect)
  {
-    isrTrigger = 1;
+    isrTrigger = TRUE;
  }
 
  /*******************************************************************************
@@ -215,7 +237,7 @@ void setup()
  * 
  * Author: 
  * 
- * Description: after the ISR sets the captureData variable to 1, a total of 44 
+ * Description: after the ISR sets the captureData variable to 1, a total of 47 
  * measurements are taken at 560us. This is off set by 230us on the first reading.
  * Taking measurement at this interval will put the measurement in the
  * middle of a signal (HIGH or LOW). Once the buffer is full, this function 
@@ -248,7 +270,10 @@ void setup()
  * 
  * Author: 
  * 
- * Description: 
+ * Description: The first 34 poitions of the inputBuffer array is compared against 
+ * the known set of IR pulses. At any time one of the first 34 positions within the 
+ * array don't match what is expected, the headerGood variable is set to false and 
+ * the application does not store the final 13 bytes of data
  *******************************************************************************/ 
  void _processData(void)
  {
@@ -316,6 +341,13 @@ void setup()
       i++;
     }
     if(headerGood == TRUE && i == 34)
+       /********************************************************
+       * If the first 34 positions of the array match what is 
+       * expected, the final 13 position are stored in the readingOne
+       * variable and the totalReadings variable is incremented
+       * to let the main loop know that this reading is ready to 
+       * be used.
+       ********************************************************/
     {
        readingOne[12] = inputBuffer[34];
        readingOne[11] = inputBuffer[35];
@@ -338,7 +370,7 @@ void setup()
     //  Serial.print(readingOne[i]);
     //}
     //Serial.print("\n");    
-   //}
+    //}
  }
 
  /*******************************************************************************
